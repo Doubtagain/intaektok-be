@@ -187,7 +187,8 @@ src/
 | `DATABASE_URL`, `REDIS_URL` | 필수 연결 문자열 | — |
 | `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET` | JWT 시크릿(운영에서 기본값 금지) | change-me |
 | `JWT_ACCESS_TTL`, `JWT_REFRESH_TTL` | 토큰 만료(초) | 1800 / 2592000 |
-| `KAKAO_REST_API_KEY`, `KAKAO_USERINFO_URL` | 카카오 검증 | — / `/v2/user/me` |
+| `KAKAO_REST_API_KEY` | **선택**(현재 플로우 미사용 — `/v2/user/me` Bearer 검증) | (빈값) |
+| `KAKAO_USERINFO_URL` | 카카오 사용자 정보 검증 URL | `/v2/user/me` |
 | `S3_*`, `CDN_BASE_URL` | 객체 스토리지/CDN | MinIO 로컬값 |
 | `FCM_SERVICE_ACCOUNT_JSON` | FCM 서비스계정 경로(없으면 푸시 no-op) | `./secrets/fcm.json` |
 | `ADMIN_USER_IDS` | 관리자 userId 목록(콤마구분) | (빈값) |
@@ -290,15 +291,17 @@ GitHub 레포 → Railway 프로젝트 → PostgreSQL 플러그인 + Redis 플�
 4. **필수 환경변수** (앱 서비스 → Variables):
    ```
    NODE_ENV=production
-   JWT_ACCESS_SECRET=<openssl rand -hex 32>
-   JWT_REFRESH_SECRET=<openssl rand -hex 32>
-   KAKAO_REST_API_KEY=<카카오 REST API 키>
+   JWT_ACCESS_SECRET=<openssl rand -hex 32>             # 직접 생성한 랜덤 시크릿
+   JWT_REFRESH_SECRET=<openssl rand -hex 32>            # 위와 다른 값
    CORS_ORIGINS=https://your-frontend.example.com      # 웹 클라이언트 도메인(모바일은 불필요)
    ADMIN_USER_IDS=<관리자 userId 콤마구분>              # 최초 로그인 후 채움
-   # 객체 스토리지(아래 14.3)
-   S3_ENDPOINT=...  S3_BUCKET=...  S3_ACCESS_KEY=...  S3_SECRET_KEY=...  S3_REGION=...
-   S3_FORCE_PATH_STYLE=true  CDN_BASE_URL=...
-   # 푸시(선택)
+   # 객체 스토리지 = Cloudflare R2 (아래 14.3)
+   S3_ENDPOINT=https://<ACCOUNT_ID>.r2.cloudflarestorage.com
+   S3_PUBLIC_ENDPOINT=https://<ACCOUNT_ID>.r2.cloudflarestorage.com
+   S3_BUCKET=intaktok-media   S3_ACCESS_KEY=...   S3_SECRET_KEY=...   S3_REGION=auto
+   S3_FORCE_PATH_STYLE=true   CDN_BASE_URL=             # 비우면 아바타도 presigned(권장)
+   # 선택
+   KAKAO_REST_API_KEY=                                 # 현재 플로우 미사용(선택)
    FCM_SERVICE_ACCOUNT=<service-account JSON을 base64 인코딩>   # base64 -w0 fcm.json
    ```
    > **PORT는 Railway가 자동 주입**합니다 — 직접 설정하지 마세요. 앱은 `0.0.0.0:$PORT`로 바인딩합니다.
@@ -310,12 +313,32 @@ GitHub 레포 → Railway 프로젝트 → PostgreSQL 플러그인 + Redis 플�
    - WebSocket: `wss://<domain>/ws`
    - Health: `https://<domain>/health`
 
-### 14.3 객체 스토리지 (Railway 외부)
+### 14.3 객체 스토리지 — Cloudflare R2 (권장)
 
-Railway에는 S3가 없습니다. **Cloudflare R2 / AWS S3 / Backblaze B2** 중 하나를 사용하세요(StorageService가 S3 호환이라 코드 변경 불필요).
+Railway에는 S3가 없으므로 **Cloudflare R2**를 사용합니다(S3 호환 → 코드 변경 불필요, env만 설정).
 
-- **Cloudflare R2 예시**: `S3_ENDPOINT=https://<account>.r2.cloudflarestorage.com`, `S3_REGION=auto`, `S3_FORCE_PATH_STYLE=true`, `CDN_BASE_URL=https://<r2-public-or-custom-domain>`. 버킷(`intaktok-media`)은 미리 생성하고, presigned 외 직접 접근은 막되 CDN 도메인으로 공개 읽기.
-- 버킷 at-rest 암호화(SSE)와 CORS(웹 업로드 시 presigned PUT 허용 오리진) 설정 권장.
+**R2 준비 (Cloudflare 대시보드)**
+1. R2 → *Create bucket* → 이름 `intaktok-media`.
+2. R2 → *Manage R2 API Tokens* → *Create API token* (Object Read & Write) → **Access Key ID / Secret Access Key** 발급.
+3. 계정 ID 확인 → S3 엔드포인트: `https://<ACCOUNT_ID>.r2.cloudflarestorage.com`.
+
+**Railway 앱 서비스 환경변수**
+```
+S3_ENDPOINT=https://<ACCOUNT_ID>.r2.cloudflarestorage.com
+S3_PUBLIC_ENDPOINT=https://<ACCOUNT_ID>.r2.cloudflarestorage.com
+S3_BUCKET=intaktok-media
+S3_ACCESS_KEY=<R2 Access Key ID>
+S3_SECRET_KEY=<R2 Secret Access Key>
+S3_REGION=auto
+S3_FORCE_PATH_STYLE=true
+CDN_BASE_URL=                # 비움 → 아바타/썸네일도 presigned로 안전하게 서빙(권장)
+```
+
+**아바타/썸네일 서빙 동작 (코드 반영됨)**
+- `CDN_BASE_URL`이 **비어 있으면**: 메시지 미디어뿐 아니라 **아바타/썸네일도 presigned GET**으로 내려갑니다 → 버킷을 **완전 private**으로 둘 수 있음(가장 안전, 기본 권장). presigned URL은 기본 1시간 만료라 목록은 클라이언트가 주기적으로 다시 받으면 됩니다.
+- 공개 CDN으로 아바타를 서빙하고 싶으면: R2 *Public access(r2.dev)* 또는 커스텀 도메인을 켜고 `CDN_BASE_URL`을 그 도메인으로 설정. 단, 이 경우 버킷이 키만 알면 공개 읽기 가능해져 **메시지 미디어도 공개**되는 트레이드오프가 있습니다.
+
+> R2는 egress 무료이고 SSE(at-rest 암호화)가 기본입니다. 웹에서 브라우저 직접 업로드(presigned PUT)를 쓰면 R2 버킷 **CORS**에 프론트 오리진을 허용하세요.
 
 ### 14.4 WebSocket / 스케일링 메모
 

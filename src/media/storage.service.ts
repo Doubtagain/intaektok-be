@@ -60,13 +60,27 @@ export class StorageService {
 
   /**
    * Public URL via CDN when configured, otherwise a path-style URL against the
-   * storage endpoint (objects must be CDN/presigned-readable for this to work).
+   * storage endpoint (objects must be CDN/public-readable for this to work).
    */
   buildPublicUrl(key: string): string {
     if (this.cdnBaseUrl) {
       return `${this.cdnBaseUrl.replace(/\/$/, '')}/${key}`;
     }
     return `${this.publicEndpoint.replace(/\/$/, '')}/${this.bucket}/${key}`;
+  }
+
+  get hasCdn(): boolean {
+    return !!this.cdnBaseUrl;
+  }
+
+  /**
+   * Read URL for an object intended to be *displayed* (avatars, thumbnails):
+   *  - CDN_BASE_URL set  -> public CDN/custom-domain URL (bucket served publicly).
+   *  - otherwise         -> presigned GET, so the bucket can stay fully private.
+   */
+  getReadUrl(key: string, expiresSec = 3600): Promise<string> {
+    if (this.cdnBaseUrl) return Promise.resolve(this.buildPublicUrl(key));
+    return this.getDownloadUrl(key, expiresSec);
   }
 
   async headObject(key: string): Promise<{ contentLength?: number; contentType?: string } | null> {

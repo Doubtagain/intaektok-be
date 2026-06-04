@@ -144,11 +144,11 @@ export class MediaService {
     return !!asRoomAvatar;
   }
 
-  private serialize(media: Media, url: string) {
+  private async serialize(media: Media, url: string) {
     return {
       mediaId: media.id,
       url,
-      thumbnailUrl: media.thumbnailKey ? this.storage.buildPublicUrl(media.thumbnailKey) : null,
+      thumbnailUrl: media.thumbnailKey ? await this.storage.getReadUrl(media.thumbnailKey) : null,
       mimeType: media.mimeType,
       isAnimated: media.isAnimated,
       width: media.width,
@@ -178,14 +178,18 @@ export class MediaService {
     if (mediaId) await this.assertOwnedMedia(mediaId, userId);
   }
 
-  /** Resolve a (possibly null) avatar mediaId to a public URL — for profile views. */
+  /**
+   * Resolve a (possibly null) avatar mediaId to a displayable URL.
+   * Public CDN URL when CDN_BASE_URL is set, otherwise a presigned GET so the
+   * bucket can remain fully private (R2/S3 recommended setup).
+   */
   async resolveAvatarUrl(mediaId: string | null | undefined): Promise<string | null> {
     if (!mediaId) return null;
     const media = await this.prisma.media.findUnique({
       where: { id: mediaId },
       select: { storageKey: true },
     });
-    return media ? this.storage.buildPublicUrl(media.storageKey) : null;
+    return media ? this.storage.getReadUrl(media.storageKey) : null;
   }
 
   /** Batch avatar resolution to avoid N+1 in list endpoints. */
@@ -197,7 +201,11 @@ export class MediaService {
       where: { id: { in: ids } },
       select: { id: true, storageKey: true },
     });
-    for (const r of rows) out.set(r.id, this.storage.buildPublicUrl(r.storageKey));
+    await Promise.all(
+      rows.map(async (r) => {
+        out.set(r.id, await this.storage.getReadUrl(r.storageKey));
+      }),
+    );
     return out;
   }
 }
