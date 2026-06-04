@@ -1,0 +1,180 @@
+// 인택톡(Intaktok) — Prisma schema
+// E2EE 미적용: 메시지 본문(Message.content)은 서버에 평문 저장된다.
+// 모듈 경계를 깨끗이 유지하여 추후 E2EE 도입 시 messages/media 모델만 교체 가능하도록 한다.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  DELETED
+}
+
+enum WhitelistStatus {
+  INVITED // 초대됨, 아직 미가입
+  ACTIVE // 가입 완료
+  BLOCKED // 차단
+}
+
+enum RoomType {
+  DIRECT // 1:1
+  GROUP // 그룹
+}
+
+enum MemberRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  GIF // 움짤(자동재생 대상)
+  VIDEO
+  FILE
+  SYSTEM // 시스템 메시지(입장/퇴장/방 이름 변경 등)
+}
+
+model Whitelist {
+  id         String          @id @default(cuid())
+  kakaoId    String?         @unique // 카카오 회원번호로 사전 등록
+  identifier String? // 이메일/전화 등 대체 식별자(선택)
+  status     WhitelistStatus @default(INVITED)
+  invitedBy  String? // 초대한 사용자 id
+  note       String?
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+
+  @@index([status])
+  @@index([identifier])
+}
+
+model User {
+  id         String     @id @default(cuid())
+  kakaoId    String     @unique // 카카오 회원번호(고유)
+  status     UserStatus @default(ACTIVE)
+  createdAt  DateTime   @default(now())
+  lastSeenAt DateTime?
+
+  profile      Profile?
+  memberships  RoomMember[]
+  pushTokens   PushToken[]
+  sentMessages Message[]    @relation("SentMessages")
+  uploads      Media[]      @relation("Uploads")
+
+  @@index([status])
+}
+
+model Profile {
+  userId        String    @id
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  nickname      String
+  statusMessage String?
+  avatarMediaId String? // 아바타 이미지(Media 참조) 또는 avatarUrl 직접 사용
+  onboardedAt   DateTime? // null이면 온보딩 미완료
+  updatedAt     DateTime  @updatedAt
+
+  @@index([nickname])
+}
+
+model Room {
+  id            String    @id @default(cuid())
+  type          RoomType
+  name          String? // GROUP에서만 사용
+  avatarMediaId String?
+  createdBy     String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  lastMessageAt DateTime? // 목록 정렬용(메시지 저장 시 갱신)
+
+  // 1:1 방 중복 방지를 위한 결정적 페어 키(DIRECT 전용, 정렬된 두 userId 조합)
+  directKey String? @unique
+
+  members  RoomMember[]
+  messages Message[]
+
+  @@index([type])
+  @@index([lastMessageAt])
+}
+
+model RoomMember {
+  roomId      String
+  userId      String
+  room        Room       @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role        MemberRole @default(MEMBER)
+  joinedAt    DateTime   @default(now())
+  lastReadSeq BigInt     @default(0) // 마지막으로 읽은 메시지 시퀀스
+  mutedUntil  DateTime?
+  leftAt      DateTime? // 그룹 퇴장 시각(이력 보존용, 소프트 탈퇴)
+
+  @@id([roomId, userId])
+  @@index([userId])
+}
+
+// 메시지: 룸 단위 단조 증가 seq, 본문은 서버 저장
+model Message {
+  id              String      @id @default(cuid())
+  roomId          String
+  room            Room        @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  senderId        String
+  sender          User        @relation("SentMessages", fields: [senderId], references: [id])
+  seq             BigInt // 룸 내 순서 보장(Redis INCR로 발급 후 영속 확정)
+  type            MessageType
+  content         String?     @db.Text // 텍스트 본문(TEXT일 때). 시스템 메시지는 코드/파라미터(JSON) 저장
+  mediaId         String? // 미디어 메시지일 때 참조
+  media           Media?      @relation(fields: [mediaId], references: [id])
+  replyToId       String? // 답장 대상 메시지(선택)
+  replyTo         Message?    @relation("Replies", fields: [replyToId], references: [id])
+  replies         Message[]   @relation("Replies")
+  clientMessageId String? // 멱등성 키(클라이언트 생성). (roomId, clientMessageId) 유니크
+  createdAt       DateTime    @default(now())
+  editedAt        DateTime?
+  deletedAt       DateTime? // 소프트 삭제(언센드)
+
+  @@unique([roomId, seq])
+  @@unique([roomId, clientMessageId])
+  @@index([roomId, createdAt])
+  @@index([roomId, seq])
+  @@index([senderId])
+}
+
+model Media {
+  id           String   @id @default(cuid())
+  uploaderId   String
+  uploader     User     @relation("Uploads", fields: [uploaderId], references: [id])
+  storageKey   String   @unique // 스토리지 객체 키
+  mimeType     String // image/gif, image/webp, video/mp4 등
+  byteSize     Int
+  width        Int?
+  height       Int?
+  durationMs   Int? // 동영상/애니메이션 길이
+  isAnimated   Boolean  @default(false) // 자동재생 대상 여부
+  thumbnailKey String? // 서버 생성 썸네일 키(선택)
+  status       String   @default("PENDING") // PENDING | READY (업로드 확정 여부)
+  createdAt    DateTime @default(now())
+
+  messages Message[]
+
+  @@index([uploaderId])
+}
+
+model PushToken {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deviceId  String? // 클라이언트 디바이스 식별(선택, 중복 정리용)
+  fcmToken  String   @unique
+  platform  String // ios | android | web
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
