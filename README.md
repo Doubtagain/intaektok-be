@@ -281,7 +281,8 @@ GitHub 레포 → Railway 프로젝트 → PostgreSQL 플러그인 + Redis 플�
 
 ### 14.2 단계
 
-1. **레포 연결**: GitHub에 푸시 → Railway에서 *New Project → Deploy from GitHub repo*. `railway.json`이 `builder: DOCKERFILE`로 빌드를 강제하고, `startCommand`로 `prisma migrate deploy && node dist/main`을 실행하며, 헬스체크는 `/health`.
+1. **레포 연결**: GitHub에 푸시 → Railway에서 *New Project → Deploy from GitHub repo*. `railway.json`이 `builder: DOCKERFILE`로 빌드를 강제하고 헬스체크는 `/health`. 시작 명령은 **Dockerfile의 `CMD ["sh","-c","npx prisma migrate deploy && node dist/main"]`** 가 담당합니다.
+   > ⚠️ Railway의 `deploy.startCommand`는 **셸로 해석되지 않으므로** `&&` 체이닝을 넣으면 안 됩니다(첫 명령에 나머지가 인자로 통째로 넘어감). 셸 체이닝이 필요하면 Dockerfile CMD처럼 명시적으로 `sh -c`로 감싸야 합니다.
 2. **DB/Redis 추가**: 프로젝트에 *New → Database → PostgreSQL*, *New → Database → Redis* 추가.
 3. **연결 변수 와이어링** (앱 서비스 → Variables). Railway 참조 변수 문법 사용(플러그인 실제 이름에 맞게):
    ```

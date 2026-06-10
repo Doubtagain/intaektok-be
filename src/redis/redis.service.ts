@@ -10,7 +10,10 @@ export class RedisService implements OnModuleDestroy {
 
   constructor(@Inject(ConfigService) private readonly config: ConfigService) {
     const url = this.config.get<string>('redisUrl')!;
-    this.client = new Redis(url, { maxRetriesPerRequest: null, lazyConnect: false });
+    // family: 0 = resolve both A and AAAA records. Required for IPv6-only
+    // private hostnames (e.g. redis.railway.internal) — ioredis defaults to
+    // IPv4 and fails with ENOTFOUND otherwise. duplicate() inherits this.
+    this.client = new Redis(url, { maxRetriesPerRequest: null, lazyConnect: false, family: 0 });
     this.client.on('error', (err) => this.logger.error(`Redis error: ${err.message}`));
     this.client.on('connect', () => this.logger.log('Redis connected'));
   }
