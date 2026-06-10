@@ -18,8 +18,20 @@ import { RedisIoAdapter } from './realtime/redis-io.adapter';
 };
 
 async function bootstrap(): Promise<void> {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule, { bufferLogs: true });
+  // Visible immediately in deploy logs, before any (buffered) Nest logger exists.
+  // eslint-disable-next-line no-console
+  console.log(
+    `[bootstrap] Intaktok backend starting (node ${process.version}, NODE_ENV=${process.env.NODE_ENV ?? 'undefined'})`,
+  );
+
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    bufferLogs: true,
+    // Reject instead of exiting inside Nest so the catch below can print the
+    // real cause — with the default (true) + bufferLogs, init errors die silently.
+    abortOnError: false,
+  });
   app.useLogger(app.get(Logger));
+  app.flushLogs();
 
   const config = app.get(ConfigService);
   const isProd = config.get<string>('nodeEnv') === 'production';
@@ -67,4 +79,21 @@ async function bootstrap(): Promise<void> {
   app.get(Logger).log(`Intaktok backend listening on :${port} (docs at /docs)`);
 }
 
-void bootstrap();
+// Fail loudly: startup crashes must reach stderr (deploy logs), bypassing any
+// buffered/structured logger that may not have been attached yet.
+process.on('unhandledRejection', (reason) => {
+  // eslint-disable-next-line no-console
+  console.error('[fatal] Unhandled promise rejection:', reason);
+  process.exit(1);
+});
+process.on('uncaughtException', (err) => {
+  // eslint-disable-next-line no-console
+  console.error('[fatal] Uncaught exception:', err);
+  process.exit(1);
+});
+
+bootstrap().catch((err) => {
+  // eslint-disable-next-line no-console
+  console.error('[fatal] Bootstrap failed:', err);
+  process.exit(1);
+});
