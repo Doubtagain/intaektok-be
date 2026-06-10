@@ -46,6 +46,11 @@ export class AuthService {
       where: { kakaoId: info.kakaoId },
     });
     if (!whitelist || whitelist.status === WhitelistStatus.BLOCKED) {
+      // Operational aid: a closed platform's admin needs the kakaoId to
+      // whitelist someone — surface it for rejected attempts.
+      this.logger.warn(
+        `Login rejected by whitelist (kakaoId=${info.kakaoId}, reason=${whitelist ? 'BLOCKED' : 'NOT_REGISTERED'})`,
+      );
       throw Errors.notAllowed();
     }
 

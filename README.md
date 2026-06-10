@@ -191,7 +191,8 @@ src/
 | `KAKAO_USERINFO_URL` | 카카오 사용자 정보 검증 URL | `/v2/user/me` |
 | `S3_*`, `CDN_BASE_URL` | 객체 스토리지/CDN | MinIO 로컬값 |
 | `FCM_SERVICE_ACCOUNT_JSON` | FCM 서비스계정 경로(없으면 푸시 no-op) | `./secrets/fcm.json` |
-| `ADMIN_USER_IDS` | 관리자 userId 목록(콤마구분) | (빈값) |
+| `ADMIN_USER_IDS` | 관리자 **userId 또는 kakaoId** 목록(콤마구분) | (빈값) |
+| `WHITELIST_BOOTSTRAP_KAKAO_IDS` | 부팅 시 화이트리스트에 자동 등록(INVITED)할 kakaoId 목록 — 멱등, BLOCKED는 건드리지 않음 | (빈값) |
 | `CORS_ORIGINS` | 허용 오리진 목록 | localhost |
 
 ### 합리적 기본값 (모호한 정책 — spec §12.11)
@@ -357,3 +358,15 @@ railway variables --set NODE_ENV=production   # 변수 설정 예시
 ```
 
 > **시크릿 주의**: `.env`/`secrets/`는 절대 커밋하지 않습니다(`.gitignore`/`.dockerignore`로 제외됨). 모든 비밀은 Railway Variables로 주입하세요. FCM은 파일 대신 `FCM_SERVICE_ACCOUNT`(base64)로 주입합니다.
+
+### 14.6 최초 로그인 부트스트랩 (폐쇄형 닭-달걀 해결)
+
+화이트리스트가 비어 있으면 아무도 로그인할 수 없고, 관리자 API는 로그인이 필요합니다. 해결 순서:
+
+1. **내 kakaoId 확인**: 카카오 개발자콘솔 → *도구 → REST API 테스트* → `/v2/user/me` 호출 → 응답의 `id`. 또는 앱에서 로그인을 한 번 시도하면 서버 로그에 `Login rejected by whitelist (kakaoId=...)`로 찍힙니다.
+2. Railway Variables에 추가(자동 재배포됨):
+   ```
+   WHITELIST_BOOTSTRAP_KAKAO_IDS=<내 kakaoId>
+   ADMIN_USER_IDS=<내 kakaoId>        # kakaoId 그대로 사용 가능
+   ```
+3. 재배포 후 로그인 → 정상 토큰 발급 + 관리자 권한. 이후 멤버 관리는 `POST /api/v1/admin/whitelist`로.

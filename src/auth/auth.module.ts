@@ -5,11 +5,12 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { KakaoService } from './kakao.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { WhitelistBootstrapService } from './whitelist-bootstrap.service';
 
 @Module({
   imports: [PassportModule, MediaModule],
   controllers: [AuthController],
-  providers: [AuthService, KakaoService, JwtStrategy],
+  providers: [AuthService, KakaoService, JwtStrategy, WhitelistBootstrapService],
   exports: [AuthService],
 })
 export class AuthModule {}

@@ -42,7 +42,12 @@ export interface AppConfig {
     limit: number;
   };
   admin: {
+    /** userIds OR kakaoIds granted admin-console access. */
     userIds: string[];
+  };
+  whitelist: {
+    /** kakaoIds auto-registered (INVITED) into the whitelist at boot. */
+    bootstrapKakaoIds: string[];
   };
 }
 
@@ -100,5 +105,8 @@ export default (): AppConfig => ({
   },
   admin: {
     userIds: toList(process.env.ADMIN_USER_IDS),
+  },
+  whitelist: {
+    bootstrapKakaoIds: toList(process.env.WHITELIST_BOOTSTRAP_KAKAO_IDS),
   },
 });
