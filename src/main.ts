@@ -3,13 +3,16 @@ import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { SwaggerModule } from '@nestjs/swagger';
+import { apiReference } from '@scalar/nestjs-api-reference';
 import { Logger } from 'nestjs-pino';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/filters/http-exception.filter';
 import { RedisService } from './redis/redis.service';
 import { RedisIoAdapter } from './realtime/redis-io.adapter';
+import { GLOBAL_API_PREFIX, GLOBAL_PREFIX_EXCLUDE } from './global-prefix';
+import { buildOpenApiDocument } from './swagger';
 
 // BigInt (Message.seq, RoomMember.lastReadSeq) -> number on JSON.stringify.
 // seq values stay well within Number.MAX_SAFE_INTEGER for this workload.
@@ -46,7 +49,7 @@ async function bootstrap(): Promise<void> {
   app.use(helmet());
   app.enableCors({ origin: corsOrigin, credentials: true });
 
-  app.setGlobalPrefix('api/v1', { exclude: ['health', 'ready'] });
+  app.setGlobalPrefix(GLOBAL_API_PREFIX, { exclude: GLOBAL_PREFIX_EXCLUDE });
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true,
@@ -61,22 +64,27 @@ async function bootstrap(): Promise<void> {
   ioAdapter.connectToRedis();
   app.useWebSocketAdapter(ioAdapter);
 
-  // Swagger / OpenAPI at /docs
-  const swaggerConfig = new DocumentBuilder()
-    .setTitle('인택톡(Intaktok) API')
-    .setDescription('폐쇄형 실시간 채팅 플랫폼 백엔드 API (v2.0, E2EE 제외)')
-    .setVersion('2.0')
-    .addBearerAuth()
-    .build();
-  const document = SwaggerModule.createDocument(app, swaggerConfig);
+  // OpenAPI document — shared by Swagger UI, Scalar, and the raw JSON/YAML routes.
+  const document = buildOpenApiDocument(app);
+  // Classic Swagger UI + raw spec at /docs, /docs-json, /docs-yaml.
   SwaggerModule.setup('docs', app, document, { swaggerOptions: { persistAuthorization: true } });
+  // Modern, more readable reference UI at /openapi-docs (frontend-facing).
+  app.use(
+    '/openapi-docs',
+    apiReference({
+      content: document,
+      theme: 'purple',
+      // Pre-fill the auth modal so "Authorize" is one paste away.
+      authentication: { preferredSecurityScheme: 'bearer' },
+    }),
+  );
 
   app.enableShutdownHooks();
 
   const port = config.get<number>('port') ?? 3000;
   // Bind to 0.0.0.0 so the container is reachable on PaaS (Railway, etc.).
   await app.listen(port, '0.0.0.0');
-  app.get(Logger).log(`Intaktok backend listening on :${port} (docs at /docs)`);
+  app.get(Logger).log(`Intaktok backend listening on :${port} (docs: /docs, /openapi-docs)`);
 }
 
 // Fail loudly: startup crashes must reach stderr (deploy logs), bypassing any
