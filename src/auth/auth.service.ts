@@ -40,7 +40,11 @@ export class AuthService {
 
   /** F1 + F2: Kakao login/sign-up with whitelist enforcement. */
   async kakaoLogin(dto: KakaoLoginDto): Promise<LoginResult> {
-    const info = await this.kakao.getUserInfo(dto.kakaoAccessToken);
+    // OAuth authorization-code flow: exchange the single-use code for a Kakao
+    // access token server-side (secret stays on the server), then resolve the
+    // identity. The browser never handles a Kakao access token or the secret.
+    const accessToken = await this.kakao.exchangeCodeForToken(dto.code, dto.redirectUri);
+    const info = await this.kakao.getUserInfo(accessToken);
 
     const whitelist = await this.prisma.whitelist.findUnique({
       where: { kakaoId: info.kakaoId },

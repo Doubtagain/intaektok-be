@@ -6,11 +6,10 @@ export function validateEnv(config: Record<string, unknown>): Record<string, unk
   const isProd = (config.NODE_ENV ?? 'development') === 'production';
 
   const required = ['DATABASE_URL', 'REDIS_URL'];
-  // NOTE: KAKAO_REST_API_KEY is intentionally NOT required — the current auth
-  // flow verifies the client-supplied Kakao access token via /v2/user/me (Bearer)
-  // and does not perform a server-side authorization-code exchange. The key is
-  // only needed if you switch to that flow later.
-  const prodRequired = ['JWT_ACCESS_SECRET', 'JWT_REFRESH_SECRET', 'S3_BUCKET'];
+  // KAKAO_REST_API_KEY is required in production: the auth flow exchanges the
+  // client-supplied authorization code for a Kakao access token server-side via
+  // /oauth/token (client_id = REST API key, + optional KAKAO_CLIENT_SECRET).
+  const prodRequired = ['JWT_ACCESS_SECRET', 'JWT_REFRESH_SECRET', 'S3_BUCKET', 'KAKAO_REST_API_KEY'];
 
   const missing: string[] = [];
   for (const key of required) {

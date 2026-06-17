@@ -73,9 +73,9 @@ src/
 
 ## 3. 인증 플로우 (카카오 OAuth)
 
-1. 클라이언트가 카카오 SDK로 로그인 → `kakaoAccessToken` 획득
-2. `POST /api/v1/auth/kakao { kakaoAccessToken }`
-3. 서버가 **카카오 `/v2/user/me`로 토큰을 직접 검증**(클라이언트 입력 불신뢰) → `kakaoId` 확보
+1. 클라이언트(SPA)가 카카오 로그인 리다이렉트 후 콜백에서 **인가 코드(`code`)** 획득
+2. `POST /api/v1/auth/kakao { code, redirectUri }`
+3. 서버가 **카카오 `/oauth/token`으로 코드를 액세스 토큰으로 교환**(앱 시크릿은 서버에만 존재) → 이어서 **`/v2/user/me`로 식별**(클라이언트 입력 불신뢰) → `kakaoId` 확보
 4. `Whitelist(kakaoId)` 확인
    - 없음/`BLOCKED` → `403 { code: "NOT_ALLOWED" }`
    - `INVITED` → `User` 생성 + `Whitelist.status=ACTIVE`

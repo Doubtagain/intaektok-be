@@ -340,20 +340,23 @@ model PushToken {
 
 ```
 Client                        Backend                       Kakao
-  │  카카오 SDK 로그인           │                              │
+  │  카카오 로그인 리다이렉트     │                              │
   │ ───────────────────────────┼───────────────────────────► │
-  │  ◄── 카카오 액세스토큰 ──────┼──────────────────────────────│
+  │  ◄── 콜백 ?code=XXX ─────────┼──────────────────────────────│
   │                            │                              │
   │ POST /auth/kakao           │                              │
-  │  { kakaoAccessToken }      │                              │
-  │ ──────────────────────────►│ 카카오 사용자정보 검증         │
-  │                            │ ────────────────────────────►│
+  │  { code, redirectUri }     │                              │
+  │ ──────────────────────────►│ 1) code+시크릿→토큰 교환       │
+  │                            │ ──── /oauth/token ──────────►│
+  │                            │ ◄── 카카오 액세스토큰 ─────────│
+  │                            │ 2) 사용자정보 검증            │
+  │                            │ ──── /v2/user/me ───────────►│
   │                            │ ◄── kakaoId, 프로필 ──────────│
   │                            │                              │
-  │                            │ 1) Whitelist(kakaoId) 확인    │
+  │                            │ 3) Whitelist(kakaoId) 확인    │
   │                            │   - 미등록 → 403 NOT_ALLOWED  │
-  │                            │ 2) User upsert                │
-  │                            │ 3) JWT 발급                   │
+  │                            │ 4) User upsert                │
+  │                            │ 5) JWT 발급                   │
   │ ◄── { accessToken,         │                              │
   │      refreshToken,         │                              │
   │      isOnboarded } ────────│                              │
@@ -368,7 +371,7 @@ Client                        Backend                       Kakao
 3. `status=INVITED` → `User` 생성 후 `Whitelist.status=ACTIVE`로 갱신.
 4. `status=ACTIVE` → 정상 로그인.
 
-> **주의**: 카카오 액세스 토큰은 서버가 카카오 API(`/v2/user/me`)로 직접 검증한다. 클라이언트가 보낸 사용자 정보를 신뢰하지 않는다.
+> **주의**: 서버가 인가 코드를 카카오 `/oauth/token`으로 액세스 토큰으로 교환한 뒤(앱 시크릿은 서버에만 존재), `/v2/user/me`로 직접 식별한다. 클라이언트가 보낸 사용자 정보를 신뢰하지 않는다.
 
 ---
 
@@ -389,11 +392,11 @@ Client                        Backend                       Kakao
 ### 6.2 인증 (Auth)
 
 #### `POST /api/v1/auth/kakao`
-카카오 액세스 토큰으로 로그인/가입.
+카카오 인가 코드(authorization code)로 로그인/가입. 서버가 코드를 액세스 토큰으로 교환한다.
 
 - Request
   ```json
-  { "kakaoAccessToken": "string", "device": { "name": "iPhone 15", "platform": "ios" } }
+  { "code": "string", "redirectUri": "https://intaektalk.app/oauth/kakao/callback", "device": { "name": "iPhone 15", "platform": "ios" } }
   ```
 - Response `200`
   ```json

@@ -11,6 +11,8 @@ export interface AppConfig {
   };
   kakao: {
     restApiKey: string;
+    clientSecret: string;
+    tokenUrl: string;
     userInfoUrl: string;
   };
   s3: {
@@ -75,6 +77,8 @@ export default (): AppConfig => ({
   },
   kakao: {
     restApiKey: process.env.KAKAO_REST_API_KEY ?? '',
+    clientSecret: process.env.KAKAO_CLIENT_SECRET ?? '',
+    tokenUrl: process.env.KAKAO_TOKEN_URL ?? 'https://kauth.kakao.com/oauth/token',
     userInfoUrl: process.env.KAKAO_USERINFO_URL ?? 'https://kapi.kakao.com/v2/user/me',
   },
   s3: {

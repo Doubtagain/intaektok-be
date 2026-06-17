@@ -44,7 +44,7 @@ import { HealthModule } from './health/health.module';
             paths: [
               'req.headers.authorization',
               'req.body.content',
-              'req.body.kakaoAccessToken',
+              'req.body.code',
               'req.body.refreshToken',
             ],
             remove: true,
