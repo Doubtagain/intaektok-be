@@ -1,5 +1,6 @@
 import { Body, Controller, Get, HttpCode, Param, Post, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { MediaResponse, UploadUrlResponse } from './dto/media-response.dto';
 import { Throttle } from '@nestjs/throttler';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
@@ -18,6 +19,7 @@ export class MediaController {
   @HttpCode(200)
   @Throttle({ default: { limit: 20, ttl: 60_000 } })
   @ApiOperation({ summary: '업로드용 presigned URL 발급' })
+  @ApiOkResponse({ type: UploadUrlResponse })
   createUploadUrl(@CurrentUser('userId') userId: string, @Body() dto: CreateUploadUrlDto) {
     return this.mediaService.createUploadUrl(userId, dto);
   }
@@ -25,12 +27,14 @@ export class MediaController {
   @Post(':mediaId/complete')
   @HttpCode(200)
   @ApiOperation({ summary: '업로드 완료 확정 (객체 존재 확인 + READY)' })
+  @ApiOkResponse({ type: MediaResponse })
   complete(@CurrentUser('userId') userId: string, @Param('mediaId') mediaId: string) {
     return this.mediaService.complete(mediaId, userId);
   }
 
   @Get(':mediaId')
   @ApiOperation({ summary: '미디어 메타데이터 + 다운로드 URL (권한 검증)' })
+  @ApiOkResponse({ type: MediaResponse })
   getMedia(@CurrentUser('userId') userId: string, @Param('mediaId') mediaId: string) {
     return this.mediaService.getMedia(mediaId, userId);
   }

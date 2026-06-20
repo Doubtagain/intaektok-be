@@ -22,7 +22,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/LoginResponse"
                 }
               }
             }
@@ -54,7 +54,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/TokenPairResponse"
                 }
               }
             }
@@ -82,7 +82,7 @@
         },
         "responses": {
           "204": {
-            "description": ""
+            "description": "로그아웃 완료(본문 없음)"
           }
         },
         "tags": [
@@ -97,7 +97,14 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeResponse"
+                }
+              }
+            }
           }
         },
         "tags": [
@@ -127,7 +134,14 @@
         },
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadUrlResponse"
+                }
+              }
+            }
           }
         },
         "tags": [
@@ -156,7 +170,14 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaResponse"
+                }
+              }
+            }
           }
         },
         "tags": [
@@ -185,7 +206,14 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaResponse"
+                }
+              }
+            }
           }
         },
         "tags": [
@@ -238,7 +266,14 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedUsersResponse"
+                }
+              }
+            }
           }
         },
         "tags": [
@@ -267,7 +302,14 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserProfileResponse"
+                }
+              }
+            }
           }
         },
         "tags": [
@@ -301,7 +343,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/ProfileResponse"
                 }
               }
             }
@@ -336,7 +378,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/ProfileResponse"
                 }
               }
             }
@@ -381,7 +423,14 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedRoomsResponse"
+                }
+              }
+            }
           }
         },
         "tags": [
@@ -413,7 +462,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/RoomViewResponse"
                 }
               }
             }
@@ -449,7 +498,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/RoomViewResponse"
                 }
               }
             }
@@ -493,7 +542,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/RoomViewResponse"
                 }
               }
             }
@@ -539,7 +588,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/RoomViewResponse"
                 }
               }
             }
@@ -593,7 +642,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "$ref": "#/components/schemas/RoomViewResponse"
                 }
               }
             }
@@ -631,7 +680,7 @@
         ],
         "responses": {
           "204": {
-            "description": ""
+            "description": "탈퇴/추방 완료(본문 없음)"
           }
         },
         "tags": [
@@ -681,7 +730,14 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedMessagesResponse"
+                }
+              }
+            }
           }
         },
         "tags": [
@@ -718,7 +774,14 @@
         },
         "responses": {
           "201": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SendMessageResponse"
+                }
+              }
+            }
           }
         },
         "tags": [
@@ -755,7 +818,7 @@
         ],
         "responses": {
           "204": {
-            "description": ""
+            "description": "언센드 완료(본문 없음)"
           }
         },
         "tags": [
@@ -794,7 +857,7 @@
         },
         "responses": {
           "204": {
-            "description": ""
+            "description": "읽음 위치 갱신 완료(본문 없음)"
           }
         },
         "tags": [
@@ -824,7 +887,14 @@
         },
         "responses": {
           "201": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PushTokenResponse"
+                }
+              }
+            }
           }
         },
         "tags": [
@@ -853,7 +923,7 @@
         ],
         "responses": {
           "204": {
-            "description": ""
+            "description": "삭제 완료(본문 없음)"
           }
         },
         "tags": [
@@ -883,7 +953,14 @@
         },
         "responses": {
           "201": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WhitelistResponse"
+                }
+              }
+            }
           }
         },
         "tags": [
@@ -936,7 +1013,14 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedWhitelistResponse"
+                }
+              }
+            }
           }
         },
         "tags": [
@@ -975,7 +1059,14 @@
         },
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WhitelistResponse"
+                }
+              }
+            }
           }
         },
         "tags": [
@@ -1002,7 +1093,7 @@
         ],
         "responses": {
           "204": {
-            "description": ""
+            "description": "삭제 완료(본문 없음)"
           }
         },
         "tags": [
@@ -1022,7 +1113,14 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
           }
         },
         "tags": [
@@ -1037,7 +1135,14 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReadyResponse"
+                }
+              }
+            }
           }
         },
         "tags": [
@@ -1102,6 +1207,48 @@
           "redirectUri"
         ]
       },
+      "LoginUserResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "kakaoId": {
+            "type": "string",
+            "description": "카카오 회원번호"
+          }
+        },
+        "required": [
+          "id",
+          "kakaoId"
+        ]
+      },
+      "LoginResponse": {
+        "type": "object",
+        "properties": {
+          "accessToken": {
+            "type": "string",
+            "description": "액세스 토큰(JWT)"
+          },
+          "refreshToken": {
+            "type": "string",
+            "description": "리프레시 토큰(JWT, 회전 대상)"
+          },
+          "user": {
+            "$ref": "#/components/schemas/LoginUserResponse"
+          },
+          "isOnboarded": {
+            "type": "boolean",
+            "description": "온보딩(프로필 생성) 완료 여부"
+          }
+        },
+        "required": [
+          "accessToken",
+          "refreshToken",
+          "user",
+          "isOnboarded"
+        ]
+      },
       "RefreshDto": {
         "type": "object",
         "properties": {
@@ -1110,6 +1257,23 @@
           }
         },
         "required": [
+          "refreshToken"
+        ]
+      },
+      "TokenPairResponse": {
+        "type": "object",
+        "properties": {
+          "accessToken": {
+            "type": "string",
+            "description": "액세스 토큰(JWT)"
+          },
+          "refreshToken": {
+            "type": "string",
+            "description": "리프레시 토큰(JWT, 회전 대상)"
+          }
+        },
+        "required": [
+          "accessToken",
           "refreshToken"
         ]
       },
@@ -1122,6 +1286,63 @@
         },
         "required": [
           "refreshToken"
+        ]
+      },
+      "MeProfileResponse": {
+        "type": "object",
+        "properties": {
+          "nickname": {
+            "type": "string"
+          },
+          "statusMessage": {
+            "type": "string",
+            "nullable": true
+          },
+          "avatarMediaId": {
+            "type": "string",
+            "nullable": true
+          },
+          "avatarUrl": {
+            "type": "string",
+            "nullable": true,
+            "description": "표시용 아바타 URL(없으면 null)"
+          }
+        },
+        "required": [
+          "nickname",
+          "statusMessage",
+          "avatarMediaId",
+          "avatarUrl"
+        ]
+      },
+      "MeResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "kakaoId": {
+            "type": "string",
+            "description": "카카오 회원번호"
+          },
+          "isOnboarded": {
+            "type": "boolean"
+          },
+          "profile": {
+            "nullable": true,
+            "description": "온보딩 전이면 null",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/MeProfileResponse"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "kakaoId",
+          "isOnboarded",
+          "profile"
         ]
       },
       "CreateUploadUrlDto": {
@@ -1158,6 +1379,148 @@
           "byteSize"
         ]
       },
+      "UploadUrlResponse": {
+        "type": "object",
+        "properties": {
+          "mediaId": {
+            "type": "string"
+          },
+          "uploadUrl": {
+            "type": "string",
+            "description": "업로드용 presigned PUT URL"
+          },
+          "storageKey": {
+            "type": "string",
+            "description": "스토리지 객체 키"
+          }
+        },
+        "required": [
+          "mediaId",
+          "uploadUrl",
+          "storageKey"
+        ]
+      },
+      "MediaResponse": {
+        "type": "object",
+        "properties": {
+          "mediaId": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string",
+            "description": "다운로드(GET) URL"
+          },
+          "thumbnailUrl": {
+            "type": "string",
+            "nullable": true,
+            "description": "썸네일 URL(없으면 null)"
+          },
+          "mimeType": {
+            "type": "string",
+            "example": "image/gif"
+          },
+          "isAnimated": {
+            "type": "boolean",
+            "description": "자동재생 대상 여부(움짤/영상)"
+          },
+          "width": {
+            "type": "number",
+            "nullable": true
+          },
+          "height": {
+            "type": "number",
+            "nullable": true
+          },
+          "durationMs": {
+            "type": "number",
+            "nullable": true,
+            "description": "동영상/애니메이션 길이(ms)"
+          }
+        },
+        "required": [
+          "mediaId",
+          "url",
+          "thumbnailUrl",
+          "mimeType",
+          "isAnimated",
+          "width",
+          "height",
+          "durationMs"
+        ]
+      },
+      "PublicUserResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "nickname": {
+            "type": "string"
+          },
+          "avatarUrl": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "nickname",
+          "avatarUrl"
+        ]
+      },
+      "PaginatedUsersResponse": {
+        "type": "object",
+        "properties": {
+          "nextCursor": {
+            "type": "string",
+            "nullable": true,
+            "example": null,
+            "description": "다음 페이지 커서. null이면 마지막 페이지입니다."
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PublicUserResponse"
+            }
+          }
+        },
+        "required": [
+          "nextCursor",
+          "items"
+        ]
+      },
+      "UserProfileResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "nickname": {
+            "type": "string"
+          },
+          "statusMessage": {
+            "type": "string",
+            "nullable": true
+          },
+          "avatarUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "lastSeenAt": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time",
+            "description": "마지막 접속 시각"
+          }
+        },
+        "required": [
+          "id",
+          "nickname",
+          "statusMessage",
+          "avatarUrl",
+          "lastSeenAt"
+        ]
+      },
       "CreateProfileDto": {
         "type": "object",
         "properties": {
@@ -1181,6 +1544,49 @@
           "nickname"
         ]
       },
+      "ProfileResponse": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string"
+          },
+          "nickname": {
+            "type": "string"
+          },
+          "statusMessage": {
+            "type": "string",
+            "nullable": true
+          },
+          "avatarMediaId": {
+            "type": "string",
+            "nullable": true
+          },
+          "onboardedAt": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time",
+            "description": "null이면 온보딩 미완료"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "avatarUrl": {
+            "type": "string",
+            "nullable": true,
+            "description": "표시용 아바타 URL(없으면 null)"
+          }
+        },
+        "required": [
+          "userId",
+          "nickname",
+          "statusMessage",
+          "avatarMediaId",
+          "onboardedAt",
+          "updatedAt",
+          "avatarUrl"
+        ]
+      },
       "UpdateProfileDto": {
         "type": "object",
         "properties": {
@@ -1197,6 +1603,156 @@
             "type": "string"
           }
         }
+      },
+      "RoomMemberResponse": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string"
+          },
+          "nickname": {
+            "type": "string",
+            "nullable": true
+          },
+          "avatarUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "OWNER",
+              "ADMIN",
+              "MEMBER"
+            ]
+          }
+        },
+        "required": [
+          "userId",
+          "nickname",
+          "avatarUrl",
+          "role"
+        ]
+      },
+      "RoomLastMessageResponse": {
+        "type": "object",
+        "properties": {
+          "seq": {
+            "type": "number",
+            "description": "룸 내 단조 증가 시퀀스"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "TEXT",
+              "IMAGE",
+              "GIF",
+              "VIDEO",
+              "FILE",
+              "SYSTEM"
+            ]
+          },
+          "preview": {
+            "type": "string",
+            "description": "미리보기 텍스트(삭제 시 placeholder)"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "seq",
+          "type",
+          "preview",
+          "createdAt"
+        ]
+      },
+      "RoomViewResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "DIRECT",
+              "GROUP"
+            ]
+          },
+          "name": {
+            "type": "string",
+            "nullable": true,
+            "description": "GROUP 방 이름"
+          },
+          "avatarUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdBy": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "lastMessageAt": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time"
+          },
+          "members": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RoomMemberResponse"
+            }
+          },
+          "lastMessage": {
+            "nullable": true,
+            "description": "마지막 메시지(없으면 null)",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RoomLastMessageResponse"
+              }
+            ]
+          },
+          "unreadCount": {
+            "type": "number",
+            "description": "미읽음 메시지 수"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "name",
+          "avatarUrl",
+          "createdBy",
+          "createdAt",
+          "lastMessageAt",
+          "members"
+        ]
+      },
+      "PaginatedRoomsResponse": {
+        "type": "object",
+        "properties": {
+          "nextCursor": {
+            "type": "string",
+            "nullable": true,
+            "example": null,
+            "description": "다음 페이지 커서. null이면 마지막 페이지입니다."
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RoomViewResponse"
+            }
+          }
+        },
+        "required": [
+          "nextCursor",
+          "items"
+        ]
       },
       "CreateRoomDto": {
         "type": "object",
@@ -1271,6 +1827,105 @@
           "role"
         ]
       },
+      "MessageResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "roomId": {
+            "type": "string"
+          },
+          "senderId": {
+            "type": "string"
+          },
+          "seq": {
+            "type": "number",
+            "description": "룸 내 단조 증가 시퀀스"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "TEXT",
+              "IMAGE",
+              "GIF",
+              "VIDEO",
+              "FILE",
+              "SYSTEM"
+            ]
+          },
+          "content": {
+            "type": "string",
+            "nullable": true,
+            "description": "TEXT 본문(삭제/미디어면 null)"
+          },
+          "mediaId": {
+            "type": "string",
+            "nullable": true
+          },
+          "replyToId": {
+            "type": "string",
+            "nullable": true
+          },
+          "clientMessageId": {
+            "type": "string",
+            "nullable": true,
+            "description": "멱등성 키"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "editedAt": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time"
+          },
+          "deletedAt": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time"
+          },
+          "readCount": {
+            "type": "number",
+            "description": "발신자 제외, 읽은 멤버 수"
+          }
+        },
+        "required": [
+          "id",
+          "roomId",
+          "senderId",
+          "seq",
+          "type",
+          "content",
+          "mediaId",
+          "replyToId",
+          "createdAt",
+          "editedAt",
+          "deletedAt"
+        ]
+      },
+      "PaginatedMessagesResponse": {
+        "type": "object",
+        "properties": {
+          "nextCursor": {
+            "type": "string",
+            "nullable": true,
+            "example": null,
+            "description": "다음 페이지 커서. null이면 마지막 페이지입니다."
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MessageResponse"
+            }
+          }
+        },
+        "required": [
+          "nextCursor",
+          "items"
+        ]
+      },
       "SendMessageDto": {
         "type": "object",
         "properties": {
@@ -1308,6 +1963,27 @@
         },
         "required": [
           "type"
+        ]
+      },
+      "SendMessageResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "seq": {
+            "type": "number",
+            "description": "발급된 시퀀스"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "seq",
+          "createdAt"
         ]
       },
       "ReadDto": {
@@ -1348,6 +2024,26 @@
           "platform"
         ]
       },
+      "PushTokenResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "platform": {
+            "type": "string",
+            "enum": [
+              "ios",
+              "android",
+              "web"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "platform"
+        ]
+      },
       "CreateWhitelistDto": {
         "type": "object",
         "properties": {
@@ -1366,6 +2062,80 @@
           }
         }
       },
+      "WhitelistResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "kakaoId": {
+            "type": "string",
+            "nullable": true,
+            "description": "카카오 회원번호"
+          },
+          "identifier": {
+            "type": "string",
+            "nullable": true,
+            "description": "대체 식별자(이메일/전화 등)"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "INVITED",
+              "ACTIVE",
+              "BLOCKED"
+            ]
+          },
+          "invitedBy": {
+            "type": "string",
+            "nullable": true,
+            "description": "초대한 사용자 id"
+          },
+          "note": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "kakaoId",
+          "identifier",
+          "status",
+          "invitedBy",
+          "note",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "PaginatedWhitelistResponse": {
+        "type": "object",
+        "properties": {
+          "nextCursor": {
+            "type": "string",
+            "nullable": true,
+            "example": null,
+            "description": "다음 페이지 커서. null이면 마지막 페이지입니다."
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WhitelistResponse"
+            }
+          }
+        },
+        "required": [
+          "nextCursor",
+          "items"
+        ]
+      },
       "UpdateWhitelistDto": {
         "type": "object",
         "properties": {
@@ -1382,6 +2152,40 @@
             "maxLength": 500
           }
         }
+      },
+      "HealthResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "ok"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "ReadyResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "ready"
+          },
+          "db": {
+            "type": "boolean",
+            "description": "DB 연결 가능 여부"
+          },
+          "redis": {
+            "type": "boolean",
+            "description": "Redis 연결 가능 여부"
+          }
+        },
+        "required": [
+          "status",
+          "db",
+          "redis"
+        ]
       }
     }
   }

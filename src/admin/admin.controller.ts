@@ -10,7 +10,15 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiCreatedResponse,
+  ApiNoContentResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
+import { PaginatedWhitelistResponse, WhitelistResponse } from './dto/whitelist-response.dto';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { AdminGuard } from '../common/guards/admin.guard';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
@@ -27,18 +35,21 @@ export class AdminController {
   @Post()
   @HttpCode(201)
   @ApiOperation({ summary: '화이트리스트 등록/초대' })
+  @ApiCreatedResponse({ type: WhitelistResponse })
   create(@CurrentUser('userId') userId: string, @Body() dto: CreateWhitelistDto) {
     return this.admin.create(dto, userId);
   }
 
   @Get()
   @ApiOperation({ summary: '화이트리스트 목록' })
+  @ApiOkResponse({ type: PaginatedWhitelistResponse })
   list(@Query() dto: ListWhitelistDto) {
     return this.admin.list(dto);
   }
 
   @Patch(':id')
   @ApiOperation({ summary: '화이트리스트 상태 변경 (BLOCKED 시 세션 무효화)' })
+  @ApiOkResponse({ type: WhitelistResponse })
   update(@Param('id') id: string, @Body() dto: UpdateWhitelistDto) {
     return this.admin.update(id, dto);
   }
@@ -46,6 +57,7 @@ export class AdminController {
   @Delete(':id')
   @HttpCode(204)
   @ApiOperation({ summary: '화이트리스트 삭제' })
+  @ApiNoContentResponse({ description: '삭제 완료(본문 없음)' })
   async remove(@Param('id') id: string): Promise<void> {
     await this.admin.remove(id);
   }

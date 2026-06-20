@@ -9,7 +9,15 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiCreatedResponse,
+  ApiNoContentResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
+import { PaginatedMessagesResponse, SendMessageResponse } from './dto/message-response.dto';
 import { Throttle } from '@nestjs/throttler';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { CursorPaginationDto } from '../common/dto/pagination.dto';
@@ -28,6 +36,7 @@ export class MessagesController {
 
   @Get('messages')
   @ApiOperation({ summary: '메시지 이력 (커서 페이지네이션, seq < cursor 인 과거 메시지)' })
+  @ApiOkResponse({ type: PaginatedMessagesResponse })
   list(@Param('roomId') roomId: string, @Query() q: CursorPaginationDto) {
     return this.messages.listMessages(roomId, q.cursor, q.limit ?? 50);
   }
@@ -36,6 +45,7 @@ export class MessagesController {
   @HttpCode(201)
   @Throttle({ default: { limit: 30, ttl: 60_000 } })
   @ApiOperation({ summary: '메시지 전송 (REST 폴백). 기본 전송은 WebSocket 사용' })
+  @ApiCreatedResponse({ type: SendMessageResponse })
   async send(
     @Param('roomId') roomId: string,
     @CurrentUser('userId') userId: string,
@@ -56,6 +66,7 @@ export class MessagesController {
   @Delete('messages/:messageId')
   @HttpCode(204)
   @ApiOperation({ summary: '메시지 삭제(언센드) — 발신자 본인' })
+  @ApiNoContentResponse({ description: '언센드 완료(본문 없음)' })
   async remove(
     @Param('roomId') roomId: string,
     @Param('messageId') messageId: string,
@@ -67,6 +78,7 @@ export class MessagesController {
   @Post('read')
   @HttpCode(204)
   @ApiOperation({ summary: '읽음 위치 갱신' })
+  @ApiNoContentResponse({ description: '읽음 위치 갱신 완료(본문 없음)' })
   async read(
     @Param('roomId') roomId: string,
     @CurrentUser('userId') userId: string,

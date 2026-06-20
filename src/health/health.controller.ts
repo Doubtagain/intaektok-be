@@ -1,5 +1,6 @@
 import { Controller, Get } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { HealthResponse, ReadyResponse } from './dto/health-response.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { RedisService } from '../redis/redis.service';
 import { Errors } from '../common/errors';
@@ -14,12 +15,14 @@ export class HealthController {
 
   @Get('health')
   @ApiOperation({ summary: 'Liveness' })
+  @ApiOkResponse({ type: HealthResponse })
   health() {
     return { status: 'ok' };
   }
 
   @Get('ready')
   @ApiOperation({ summary: 'Readiness (DB + Redis 연결 확인)' })
+  @ApiOkResponse({ type: ReadyResponse })
   async ready() {
     const checks = { db: false, redis: false };
     try {

@@ -1,5 +1,6 @@
 import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { PaginatedUsersResponse, UserProfileResponse } from './dto/user-response.dto';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { OnboardedGuard } from '../common/guards/onboarded.guard';
@@ -15,12 +16,14 @@ export class UsersController {
 
   @Get('search')
   @ApiOperation({ summary: '등록 사용자 검색 (닉네임)' })
+  @ApiOkResponse({ type: PaginatedUsersResponse })
   search(@CurrentUser('userId') userId: string, @Query() dto: SearchUsersDto) {
     return this.usersService.search(userId, dto);
   }
 
   @Get(':userId/profile')
   @ApiOperation({ summary: '사용자 프로필 조회 (같은 룸/연락처만)' })
+  @ApiOkResponse({ type: UserProfileResponse })
   getProfile(@CurrentUser('userId') requesterId: string, @Param('userId') userId: string) {
     return this.usersService.getProfile(userId, requesterId);
   }

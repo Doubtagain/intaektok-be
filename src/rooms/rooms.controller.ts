@@ -10,7 +10,15 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiCreatedResponse,
+  ApiNoContentResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
+import { PaginatedRoomsResponse, RoomViewResponse } from './dto/room-response.dto';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { RoomMembership } from '../common/decorators/room-member.decorator';
 import { CursorPaginationDto } from '../common/dto/pagination.dto';
@@ -30,12 +38,14 @@ export class RoomsController {
 
   @Get()
   @ApiOperation({ summary: '내 채팅방 목록 (최근 활동순, 미읽음 수 포함)' })
+  @ApiOkResponse({ type: PaginatedRoomsResponse })
   list(@CurrentUser('userId') userId: string, @Query() q: CursorPaginationDto) {
     return this.rooms.listRooms(userId, q.cursor, q.limit ?? 30);
   }
 
   @Post()
   @ApiOperation({ summary: '방 생성 (1:1 중복 시 기존 방 반환 / 그룹)' })
+  @ApiCreatedResponse({ type: RoomViewResponse })
   create(@CurrentUser('userId') userId: string, @Body() dto: CreateRoomDto) {
     return this.rooms.createRoom(userId, dto);
   }
@@ -43,6 +53,7 @@ export class RoomsController {
   @Get(':roomId')
   @UseGuards(RoomMemberGuard)
   @ApiOperation({ summary: '방 상세 + 멤버 목록' })
+  @ApiOkResponse({ type: RoomViewResponse })
   detail(@CurrentUser('userId') userId: string, @Param('roomId') roomId: string) {
     return this.rooms.getRoomView(roomId, userId);
   }
@@ -50,6 +61,7 @@ export class RoomsController {
   @Patch(':roomId')
   @UseGuards(RoomMemberGuard)
   @ApiOperation({ summary: '방 정보 수정 (그룹, OWNER/ADMIN)' })
+  @ApiOkResponse({ type: RoomViewResponse })
   update(
     @Param('roomId') roomId: string,
     @RoomMembership() membership: ActiveMembership,
@@ -61,6 +73,7 @@ export class RoomsController {
   @Post(':roomId/members')
   @UseGuards(RoomMemberGuard)
   @ApiOperation({ summary: '멤버 추가 (그룹, OWNER/ADMIN)' })
+  @ApiCreatedResponse({ type: RoomViewResponse })
   addMembers(
     @Param('roomId') roomId: string,
     @RoomMembership() membership: ActiveMembership,
@@ -72,6 +85,7 @@ export class RoomsController {
   @Patch(':roomId/members/:userId')
   @UseGuards(RoomMemberGuard)
   @ApiOperation({ summary: '멤버 역할 변경 (그룹, OWNER)' })
+  @ApiOkResponse({ type: RoomViewResponse })
   updateMemberRole(
     @Param('roomId') roomId: string,
     @Param('userId') userId: string,
@@ -85,6 +99,7 @@ export class RoomsController {
   @UseGuards(RoomMemberGuard)
   @HttpCode(204)
   @ApiOperation({ summary: '멤버 탈퇴(본인) 또는 추방(OWNER/ADMIN)' })
+  @ApiNoContentResponse({ description: '탈퇴/추방 완료(본문 없음)' })
   async removeMember(
     @Param('roomId') roomId: string,
     @Param('userId') userId: string,
