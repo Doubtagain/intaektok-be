@@ -7,8 +7,9 @@ import { PrismaService } from '../prisma/prisma.service';
 import { RedisService } from '../redis/redis.service';
 import { MediaService } from '../media/media.service';
 import { Errors } from '../common/errors';
+import { isAdminIdentity } from '../common/admin.util';
 import { AccessTokenPayload, RefreshTokenPayload } from '../common/types';
-import { KakaoService } from './kakao.service';
+import { KakaoService, KakaoUserInfo } from './kakao.service';
 import { KakaoLoginDto } from './dto/auth.dto';
 
 export interface TokenPair {
@@ -50,6 +51,9 @@ export class AuthService {
       where: { kakaoId: info.kakaoId },
     });
     if (!whitelist || whitelist.status === WhitelistStatus.BLOCKED) {
+      // Only NOT_REGISTERED attempts join the approval queue — a BLOCKED user is
+      // already a known whitelist decision and must not resurface as "pending".
+      if (!whitelist) await this.recordAccessRequest(info);
       // Operational aid: a closed platform's admin needs the kakaoId to
       // whitelist someone — surface it for rejected attempts.
       this.logger.warn(
@@ -85,6 +89,33 @@ export class AuthService {
       user: { id: user.id, kakaoId: user.kakaoId },
       isOnboarded: !!profile?.onboardedAt,
     };
+  }
+
+  /**
+   * Queue an unregistered login attempt so an admin can approve it from the
+   * console (closed-platform onboarding aid). Best-effort: a bookkeeping failure
+   * must never turn the 403 rejection into a 500.
+   */
+  private async recordAccessRequest(info: KakaoUserInfo): Promise<void> {
+    try {
+      await this.prisma.accessRequest.upsert({
+        where: { kakaoId: info.kakaoId },
+        create: {
+          kakaoId: info.kakaoId,
+          nickname: info.nickname ?? null,
+          profileImageUrl: info.profileImageUrl ?? null,
+        },
+        update: {
+          attempts: { increment: 1 },
+          nickname: info.nickname ?? null,
+          profileImageUrl: info.profileImageUrl ?? null,
+        },
+      });
+    } catch (err) {
+      this.logger.warn(
+        `Failed to record access request (kakaoId=${info.kakaoId}): ${(err as Error).message}`,
+      );
+    }
   }
 
   async issueTokens(userId: string): Promise<TokenPair> {
@@ -164,10 +195,12 @@ export class AuthService {
     if (!user) throw Errors.notFound('사용자를 찾을 수 없습니다.');
 
     const avatarUrl = await this.media.resolveAvatarUrl(user.profile?.avatarMediaId);
+    const adminIds = this.config.get<string[]>('admin.userIds') ?? [];
     return {
       id: user.id,
       kakaoId: user.kakaoId,
       isOnboarded: !!user.profile?.onboardedAt,
+      isAdmin: isAdminIdentity(adminIds, user.id, user.kakaoId),
       profile: user.profile
         ? {
             nickname: user.profile.nickname,

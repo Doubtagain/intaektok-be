@@ -57,6 +57,21 @@ model Whitelist {
   @@index([identifier])
 }
 
+// 가입 대기 큐: 화이트리스트 미등록 상태로 로그인 시도해 거부된 사용자를 적재한다.
+// 이 테이블에 있다고 접근이 허용되는 것은 아니다 — 게이팅은 Whitelist만 본다.
+// 관리자가 승인하면 Whitelist(INVITED)로 승격되고 이 행은 삭제된다.
+model AccessRequest {
+  id              String   @id @default(cuid())
+  kakaoId         String   @unique // 로그인 시도에서 확보한 카카오 회원번호
+  nickname        String? // 카카오 프로필 닉네임(표시용)
+  profileImageUrl String? // 카카오 프로필 이미지(표시용)
+  attempts        Int      @default(1) // 누적 로그인 시도 횟수
+  createdAt       DateTime @default(now()) // 최초 시도 시각
+  lastAttemptAt   DateTime @updatedAt // 마지막 시도 시각
+
+  @@index([createdAt])
+}
+
 model User {
   id         String     @id @default(cuid())
   kakaoId    String     @unique // 카카오 회원번호(고유)
