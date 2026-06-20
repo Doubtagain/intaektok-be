@@ -1,6 +1,7 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../prisma/prisma.service';
+import { isAdminIdentity } from '../admin.util';
 import { AuthUser } from '../types';
 import { Errors } from '../errors';
 
@@ -25,13 +26,14 @@ export class AdminGuard implements CanActivate {
     if (!user?.userId || !adminIds.length) {
       throw Errors.forbidden('관리자 권한이 필요합니다.');
     }
-    if (adminIds.includes(user.userId)) return true;
+    // Fast path: userId match needs no DB hit.
+    if (isAdminIdentity(adminIds, user.userId)) return true;
 
     const dbUser = await this.prisma.user.findUnique({
       where: { id: user.userId },
       select: { kakaoId: true },
     });
-    if (dbUser && adminIds.includes(dbUser.kakaoId)) return true;
+    if (isAdminIdentity(adminIds, user.userId, dbUser?.kakaoId)) return true;
 
     throw Errors.forbidden('관리자 권한이 필요합니다.');
   }

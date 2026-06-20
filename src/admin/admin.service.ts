@@ -1,10 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { Prisma, Whitelist, WhitelistStatus } from '@prisma/client';
+import { AccessRequest, Prisma, Whitelist, WhitelistStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { RedisService } from '../redis/redis.service';
 import { Errors } from '../common/errors';
-import { Paginated } from '../common/dto/pagination.dto';
+import { CursorPaginationDto, Paginated } from '../common/dto/pagination.dto';
 import { DomainEvents, SessionRevokedEvent } from '../common/events';
 import { CreateWhitelistDto, ListWhitelistDto, UpdateWhitelistDto } from './dto/whitelist.dto';
 
@@ -102,5 +102,67 @@ export class AdminService {
     if (user && user.status === 'SUSPENDED') {
       await this.prisma.user.update({ where: { id: user.id }, data: { status: 'ACTIVE' } });
     }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Access requests — the "login first, approve later" queue. Unregistered
+  // login attempts land here (auth.service) so an admin can promote them to the
+  // whitelist without ever needing to know a kakaoId up front.
+  // ---------------------------------------------------------------------------
+  async listAccessRequests(dto: CursorPaginationDto): Promise<Paginated<AccessRequest>> {
+    const limit = dto.limit ?? 50;
+    const where: Prisma.AccessRequestWhereInput = {};
+    if (dto.cursor) where.createdAt = { lt: new Date(dto.cursor) };
+
+    const rows = await this.prisma.accessRequest.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      take: limit + 1,
+    });
+    const hasMore = rows.length > limit;
+    const page = hasMore ? rows.slice(0, limit) : rows;
+    return {
+      items: page,
+      nextCursor: hasMore ? page[page.length - 1].createdAt.toISOString() : null,
+    };
+  }
+
+  /**
+   * Approve a pending request: promote its kakaoId to the whitelist (INVITED)
+   * and clear the queue entry. Idempotent against an already-whitelisted kakaoId
+   * (race with manual registration); refuses to silently approve a BLOCKED one.
+   */
+  async approveAccessRequest(id: string, invitedBy: string): Promise<Whitelist> {
+    const request = await this.prisma.accessRequest.findUnique({ where: { id } });
+    if (!request) throw Errors.notFound('가입 대기 항목을 찾을 수 없습니다.');
+
+    const existing = await this.prisma.whitelist.findUnique({
+      where: { kakaoId: request.kakaoId },
+    });
+    if (existing) {
+      if (existing.status === WhitelistStatus.BLOCKED) {
+        throw Errors.conflict('차단된 사용자입니다. 먼저 차단을 해제하세요.');
+      }
+      // Already whitelisted — just drain the queue and return the existing row.
+      await this.prisma.accessRequest.delete({ where: { id } });
+      return existing;
+    }
+
+    const whitelist = await this.prisma.whitelist.create({
+      data: {
+        kakaoId: request.kakaoId,
+        status: WhitelistStatus.INVITED,
+        invitedBy,
+        note: request.nickname ? `가입 요청 승인: ${request.nickname}` : '가입 요청 승인',
+      },
+    });
+    await this.prisma.accessRequest.delete({ where: { id } });
+    return whitelist;
+  }
+
+  /** Dismiss (reject/ignore) a pending request without whitelisting it. */
+  async dismissAccessRequest(id: string): Promise<void> {
+    const res = await this.prisma.accessRequest.deleteMany({ where: { id } });
+    if (res.count === 0) throw Errors.notFound('가입 대기 항목을 찾을 수 없습니다.');
   }
 }

@@ -51,6 +51,9 @@ export class MeResponse {
   @ApiProperty()
   isOnboarded!: boolean;
 
+  @ApiProperty({ description: '관리자 콘솔 접근 권한 여부(ADMIN_USER_IDS 기준)' })
+  isAdmin!: boolean;
+
   @ApiProperty({
     type: MeProfileResponse,
     nullable: true,

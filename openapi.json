@@ -1106,6 +1106,120 @@
         ]
       }
     },
+    "/api/v1/admin/access-requests": {
+      "get": {
+        "operationId": "AccessRequestController_list",
+        "summary": "가입 대기 목록 (화이트리스트 미등록 로그인 시도)",
+        "parameters": [
+          {
+            "name": "cursor",
+            "required": false,
+            "in": "query",
+            "description": "커서(seq 또는 id 또는 ISO 타임스탬프)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "페이지 크기",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 50,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedAccessRequestsResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/admin/access-requests/{id}/approve": {
+      "post": {
+        "operationId": "AccessRequestController_approve",
+        "summary": "가입 승인 (화이트리스트 INVITED로 승격 + 대기열 제거)",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WhitelistResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/admin/access-requests/{id}": {
+      "delete": {
+        "operationId": "AccessRequestController_dismiss",
+        "summary": "가입 대기 항목 삭제 (거절/무시)",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "삭제 완료(본문 없음)"
+          }
+        },
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
     "/health": {
       "get": {
         "operationId": "HealthController_health",
@@ -1328,6 +1442,10 @@
           "isOnboarded": {
             "type": "boolean"
           },
+          "isAdmin": {
+            "type": "boolean",
+            "description": "관리자 콘솔 접근 권한 여부(ADMIN_USER_IDS 기준)"
+          },
           "profile": {
             "nullable": true,
             "description": "온보딩 전이면 null",
@@ -1342,6 +1460,7 @@
           "id",
           "kakaoId",
           "isOnboarded",
+          "isAdmin",
           "profile"
         ]
       },
@@ -2152,6 +2271,71 @@
             "maxLength": 500
           }
         }
+      },
+      "AccessRequestResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "kakaoId": {
+            "type": "string",
+            "description": "로그인 시도에서 확보한 카카오 회원번호"
+          },
+          "nickname": {
+            "type": "string",
+            "nullable": true,
+            "description": "카카오 프로필 닉네임"
+          },
+          "profileImageUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "attempts": {
+            "type": "number",
+            "description": "누적 로그인 시도 횟수"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "최초 시도 시각"
+          },
+          "lastAttemptAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "마지막 시도 시각"
+          }
+        },
+        "required": [
+          "id",
+          "kakaoId",
+          "nickname",
+          "profileImageUrl",
+          "attempts",
+          "createdAt",
+          "lastAttemptAt"
+        ]
+      },
+      "PaginatedAccessRequestsResponse": {
+        "type": "object",
+        "properties": {
+          "nextCursor": {
+            "type": "string",
+            "nullable": true,
+            "example": null,
+            "description": "다음 페이지 커서. null이면 마지막 페이지입니다."
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AccessRequestResponse"
+            }
+          }
+        },
+        "required": [
+          "nextCursor",
+          "items"
+        ]
       },
       "HealthResponse": {
         "type": "object",
